@@ -1,0 +1,35 @@
+name: C++ CI with Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install deps
+      run: |
+        sudo apt update
+        sudo apt install -y g++-9 cmake libgtest-dev
+        cd /usr/src/googletest && sudo cmake . && sudo make install
+
+    - name: Build main program
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make -j$(nproc)
+
+    - name: Build & run integration test
+      run: |
+        mkdir build_test
+        cd build_test
+        cmake -DBUILD_TEST=ON ..
+        make -j$(nproc)
+        ctest --verbose
